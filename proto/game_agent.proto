@@ -122,6 +122,12 @@ message ActionResponse {
   bool success = 3;
   string error = 4;
   string output = 5;  // 添加输出字段，用于返回工具执行结果（如 list_tabs 的 JSON）
+  
+  // 动作执行后的截图 (Base64 编码或 bytes)
+  bytes screenshot = 6;
+    
+  // 截图相关的元数据 (可选)
+  DeviceInfo device_info = 7;
 }
 
 // HeartbeatRequest 心跳请求
@@ -153,6 +159,13 @@ message Coordinates {
 
 // Action 执行动作 - 使用强类型参数
 message Action {
+  // 执行动作后的等待时间 (毫秒)
+  // 如果设置，将覆盖客户端的默认配置
+  int32 wait_time_ms = 26;
+    
+  // 是否需要在执行后返回截图
+  bool require_screenshot = 27;
+
   oneof params {
     ClickParams click = 2;
     TypeTextParams type_text = 3;

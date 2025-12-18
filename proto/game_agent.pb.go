@@ -1038,12 +1038,16 @@ func (x *ActionRequest) GetExecutionId() string {
 
 // ActionResponse 动作执行响应
 type ActionResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	TaskId        string                 `protobuf:"bytes,1,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
-	Step          int32                  `protobuf:"varint,2,opt,name=step,proto3" json:"step,omitempty"`
-	Success       bool                   `protobuf:"varint,3,opt,name=success,proto3" json:"success,omitempty"`
-	Error         string                 `protobuf:"bytes,4,opt,name=error,proto3" json:"error,omitempty"`
-	Output        string                 `protobuf:"bytes,5,opt,name=output,proto3" json:"output,omitempty"` // 添加输出字段，用于返回工具执行结果（如 list_tabs 的 JSON）
+	state   protoimpl.MessageState `protogen:"open.v1"`
+	TaskId  string                 `protobuf:"bytes,1,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
+	Step    int32                  `protobuf:"varint,2,opt,name=step,proto3" json:"step,omitempty"`
+	Success bool                   `protobuf:"varint,3,opt,name=success,proto3" json:"success,omitempty"`
+	Error   string                 `protobuf:"bytes,4,opt,name=error,proto3" json:"error,omitempty"`
+	Output  string                 `protobuf:"bytes,5,opt,name=output,proto3" json:"output,omitempty"` // 添加输出字段，用于返回工具执行结果（如 list_tabs 的 JSON）
+	// 动作执行后的截图 (Base64 编码或 bytes)
+	Screenshot []byte `protobuf:"bytes,6,opt,name=screenshot,proto3" json:"screenshot,omitempty"`
+	// 截图相关的元数据 (可选)
+	DeviceInfo    *DeviceInfo `protobuf:"bytes,7,opt,name=device_info,json=deviceInfo,proto3" json:"device_info,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1111,6 +1115,20 @@ func (x *ActionResponse) GetOutput() string {
 		return x.Output
 	}
 	return ""
+}
+
+func (x *ActionResponse) GetScreenshot() []byte {
+	if x != nil {
+		return x.Screenshot
+	}
+	return nil
+}
+
+func (x *ActionResponse) GetDeviceInfo() *DeviceInfo {
+	if x != nil {
+		return x.DeviceInfo
+	}
+	return nil
 }
 
 // HeartbeatRequest 心跳请求
@@ -1352,6 +1370,11 @@ func (x *Coordinates) GetY() int32 {
 // Action 执行动作 - 使用强类型参数
 type Action struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
+	// 执行动作后的等待时间 (毫秒)
+	// 如果设置，将覆盖客户端的默认配置
+	WaitTimeMs int32 `protobuf:"varint,26,opt,name=wait_time_ms,json=waitTimeMs,proto3" json:"wait_time_ms,omitempty"`
+	// 是否需要在执行后返回截图
+	RequireScreenshot bool `protobuf:"varint,27,opt,name=require_screenshot,json=requireScreenshot,proto3" json:"require_screenshot,omitempty"`
 	// Types that are valid to be assigned to Params:
 	//
 	//	*Action_Click
@@ -1411,6 +1434,20 @@ func (x *Action) ProtoReflect() protoreflect.Message {
 // Deprecated: Use Action.ProtoReflect.Descriptor instead.
 func (*Action) Descriptor() ([]byte, []int) {
 	return file_proto_game_agent_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *Action) GetWaitTimeMs() int32 {
+	if x != nil {
+		return x.WaitTimeMs
+	}
+	return 0
+}
+
+func (x *Action) GetRequireScreenshot() bool {
+	if x != nil {
+		return x.RequireScreenshot
+	}
+	return false
 }
 
 func (x *Action) GetParams() isAction_Params {
@@ -3008,13 +3045,18 @@ const file_proto_game_agent_proto_rawDesc = "" +
 	"\atask_id\x18\x01 \x01(\tR\x06taskId\x12\x12\n" +
 	"\x04step\x18\x02 \x01(\x05R\x04step\x12)\n" +
 	"\x06action\x18\x03 \x01(\v2\x11.gameagent.ActionR\x06action\x12!\n" +
-	"\fexecution_id\x18\x04 \x01(\tR\vexecutionId\"\x85\x01\n" +
+	"\fexecution_id\x18\x04 \x01(\tR\vexecutionId\"\xdd\x01\n" +
 	"\x0eActionResponse\x12\x17\n" +
 	"\atask_id\x18\x01 \x01(\tR\x06taskId\x12\x12\n" +
 	"\x04step\x18\x02 \x01(\x05R\x04step\x12\x18\n" +
 	"\asuccess\x18\x03 \x01(\bR\asuccess\x12\x14\n" +
 	"\x05error\x18\x04 \x01(\tR\x05error\x12\x16\n" +
-	"\x06output\x18\x05 \x01(\tR\x06output\"M\n" +
+	"\x06output\x18\x05 \x01(\tR\x06output\x12\x1e\n" +
+	"\n" +
+	"screenshot\x18\x06 \x01(\fR\n" +
+	"screenshot\x126\n" +
+	"\vdevice_info\x18\a \x01(\v2\x15.gameagent.DeviceInfoR\n" +
+	"deviceInfo\"M\n" +
 	"\x10HeartbeatRequest\x12\x1b\n" +
 	"\tclient_id\x18\x01 \x01(\tR\bclientId\x12\x1c\n" +
 	"\ttimestamp\x18\x02 \x01(\x03R\ttimestamp\"1\n" +
@@ -3032,9 +3074,11 @@ const file_proto_game_agent_proto_rawDesc = "" +
 	"\bheadless\x18\x06 \x01(\bR\bheadless\")\n" +
 	"\vCoordinates\x12\f\n" +
 	"\x01x\x18\x01 \x01(\x05R\x01x\x12\f\n" +
-	"\x01y\x18\x02 \x01(\x05R\x01y\"\xff\n" +
-	"\n" +
-	"\x06Action\x12.\n" +
+	"\x01y\x18\x02 \x01(\x05R\x01y\"\xd0\v\n" +
+	"\x06Action\x12 \n" +
+	"\fwait_time_ms\x18\x1a \x01(\x05R\n" +
+	"waitTimeMs\x12-\n" +
+	"\x12require_screenshot\x18\x1b \x01(\bR\x11requireScreenshot\x12.\n" +
 	"\x05click\x18\x02 \x01(\v2\x16.gameagent.ClickParamsH\x00R\x05click\x128\n" +
 	"\ttype_text\x18\x03 \x01(\v2\x19.gameagent.TypeTextParamsH\x00R\btypeText\x121\n" +
 	"\x06scroll\x18\x04 \x01(\v2\x17.gameagent.ScrollParamsH\x00R\x06scroll\x128\n" +
@@ -3202,48 +3246,49 @@ var file_proto_game_agent_proto_depIdxs = []int32{
 	5,  // 12: gameagent.ServerMessage.cancel_action_request:type_name -> gameagent.CancelActionRequest
 	15, // 13: gameagent.ScreenshotResponse.device_info:type_name -> gameagent.DeviceInfo
 	17, // 14: gameagent.ActionRequest.action:type_name -> gameagent.Action
-	18, // 15: gameagent.Action.click:type_name -> gameagent.ClickParams
-	19, // 16: gameagent.Action.type_text:type_name -> gameagent.TypeTextParams
-	20, // 17: gameagent.Action.scroll:type_name -> gameagent.ScrollParams
-	21, // 18: gameagent.Action.scroll_at:type_name -> gameagent.ScrollAtParams
-	22, // 19: gameagent.Action.navigate:type_name -> gameagent.NavigateParams
-	23, // 20: gameagent.Action.wait:type_name -> gameagent.WaitParams
-	24, // 21: gameagent.Action.press_key:type_name -> gameagent.PressKeyParams
-	25, // 22: gameagent.Action.search:type_name -> gameagent.SearchParams
-	26, // 23: gameagent.Action.clear_text:type_name -> gameagent.ClearTextParams
-	27, // 24: gameagent.Action.start_app:type_name -> gameagent.StartAppParams
-	28, // 25: gameagent.Action.stop_app:type_name -> gameagent.StopAppParams
-	29, // 26: gameagent.Action.new_tab:type_name -> gameagent.NewTabParams
-	30, // 27: gameagent.Action.close_tab:type_name -> gameagent.CloseTabParams
-	31, // 28: gameagent.Action.switch_tab:type_name -> gameagent.SwitchTabParams
-	32, // 29: gameagent.Action.list_tabs:type_name -> gameagent.ListTabsParams
-	33, // 30: gameagent.Action.right_click:type_name -> gameagent.RightClickParams
-	34, // 31: gameagent.Action.hover:type_name -> gameagent.HoverParams
-	35, // 32: gameagent.Action.double_click:type_name -> gameagent.DoubleClickParams
-	36, // 33: gameagent.Action.take_screenshot:type_name -> gameagent.TakeScreenshotParams
-	37, // 34: gameagent.Action.complete:type_name -> gameagent.CompleteParams
-	38, // 35: gameagent.Action.failed:type_name -> gameagent.FailedParams
-	39, // 36: gameagent.Action.start_recording:type_name -> gameagent.StartRecordingParams
-	40, // 37: gameagent.Action.stop_recording:type_name -> gameagent.StopRecordingParams
-	41, // 38: gameagent.Action.swipe:type_name -> gameagent.SwipeParams
-	16, // 39: gameagent.ClickParams.coordinates:type_name -> gameagent.Coordinates
-	16, // 40: gameagent.TypeTextParams.coordinates:type_name -> gameagent.Coordinates
-	16, // 41: gameagent.ScrollParams.coordinates:type_name -> gameagent.Coordinates
-	16, // 42: gameagent.ScrollAtParams.coordinates:type_name -> gameagent.Coordinates
-	16, // 43: gameagent.SearchParams.coordinates:type_name -> gameagent.Coordinates
-	16, // 44: gameagent.ClearTextParams.coordinates:type_name -> gameagent.Coordinates
-	16, // 45: gameagent.RightClickParams.coordinates:type_name -> gameagent.Coordinates
-	16, // 46: gameagent.HoverParams.coordinates:type_name -> gameagent.Coordinates
-	16, // 47: gameagent.DoubleClickParams.coordinates:type_name -> gameagent.Coordinates
-	16, // 48: gameagent.SwipeParams.start:type_name -> gameagent.Coordinates
-	16, // 49: gameagent.SwipeParams.end:type_name -> gameagent.Coordinates
-	0,  // 50: gameagent.GameAgentService.ClientStream:input_type -> gameagent.ClientMessage
-	1,  // 51: gameagent.GameAgentService.ClientStream:output_type -> gameagent.ServerMessage
-	51, // [51:52] is the sub-list for method output_type
-	50, // [50:51] is the sub-list for method input_type
-	50, // [50:50] is the sub-list for extension type_name
-	50, // [50:50] is the sub-list for extension extendee
-	0,  // [0:50] is the sub-list for field type_name
+	15, // 15: gameagent.ActionResponse.device_info:type_name -> gameagent.DeviceInfo
+	18, // 16: gameagent.Action.click:type_name -> gameagent.ClickParams
+	19, // 17: gameagent.Action.type_text:type_name -> gameagent.TypeTextParams
+	20, // 18: gameagent.Action.scroll:type_name -> gameagent.ScrollParams
+	21, // 19: gameagent.Action.scroll_at:type_name -> gameagent.ScrollAtParams
+	22, // 20: gameagent.Action.navigate:type_name -> gameagent.NavigateParams
+	23, // 21: gameagent.Action.wait:type_name -> gameagent.WaitParams
+	24, // 22: gameagent.Action.press_key:type_name -> gameagent.PressKeyParams
+	25, // 23: gameagent.Action.search:type_name -> gameagent.SearchParams
+	26, // 24: gameagent.Action.clear_text:type_name -> gameagent.ClearTextParams
+	27, // 25: gameagent.Action.start_app:type_name -> gameagent.StartAppParams
+	28, // 26: gameagent.Action.stop_app:type_name -> gameagent.StopAppParams
+	29, // 27: gameagent.Action.new_tab:type_name -> gameagent.NewTabParams
+	30, // 28: gameagent.Action.close_tab:type_name -> gameagent.CloseTabParams
+	31, // 29: gameagent.Action.switch_tab:type_name -> gameagent.SwitchTabParams
+	32, // 30: gameagent.Action.list_tabs:type_name -> gameagent.ListTabsParams
+	33, // 31: gameagent.Action.right_click:type_name -> gameagent.RightClickParams
+	34, // 32: gameagent.Action.hover:type_name -> gameagent.HoverParams
+	35, // 33: gameagent.Action.double_click:type_name -> gameagent.DoubleClickParams
+	36, // 34: gameagent.Action.take_screenshot:type_name -> gameagent.TakeScreenshotParams
+	37, // 35: gameagent.Action.complete:type_name -> gameagent.CompleteParams
+	38, // 36: gameagent.Action.failed:type_name -> gameagent.FailedParams
+	39, // 37: gameagent.Action.start_recording:type_name -> gameagent.StartRecordingParams
+	40, // 38: gameagent.Action.stop_recording:type_name -> gameagent.StopRecordingParams
+	41, // 39: gameagent.Action.swipe:type_name -> gameagent.SwipeParams
+	16, // 40: gameagent.ClickParams.coordinates:type_name -> gameagent.Coordinates
+	16, // 41: gameagent.TypeTextParams.coordinates:type_name -> gameagent.Coordinates
+	16, // 42: gameagent.ScrollParams.coordinates:type_name -> gameagent.Coordinates
+	16, // 43: gameagent.ScrollAtParams.coordinates:type_name -> gameagent.Coordinates
+	16, // 44: gameagent.SearchParams.coordinates:type_name -> gameagent.Coordinates
+	16, // 45: gameagent.ClearTextParams.coordinates:type_name -> gameagent.Coordinates
+	16, // 46: gameagent.RightClickParams.coordinates:type_name -> gameagent.Coordinates
+	16, // 47: gameagent.HoverParams.coordinates:type_name -> gameagent.Coordinates
+	16, // 48: gameagent.DoubleClickParams.coordinates:type_name -> gameagent.Coordinates
+	16, // 49: gameagent.SwipeParams.start:type_name -> gameagent.Coordinates
+	16, // 50: gameagent.SwipeParams.end:type_name -> gameagent.Coordinates
+	0,  // 51: gameagent.GameAgentService.ClientStream:input_type -> gameagent.ClientMessage
+	1,  // 52: gameagent.GameAgentService.ClientStream:output_type -> gameagent.ServerMessage
+	52, // [52:53] is the sub-list for method output_type
+	51, // [51:52] is the sub-list for method input_type
+	51, // [51:51] is the sub-list for extension type_name
+	51, // [51:51] is the sub-list for extension extendee
+	0,  // [0:51] is the sub-list for field type_name
 }
 
 func init() { file_proto_game_agent_proto_init() }
